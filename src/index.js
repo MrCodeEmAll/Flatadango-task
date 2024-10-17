@@ -1,86 +1,99 @@
-const filmsList = document.getElementById('films');
-const movieTitle = document.getElementById('movie-title');
-const moviePoster = document.getElementById('movie-poster');
-const movieRuntime = document.getElementById('movie-runtime');
-const movieShowtime = document.getElementById('movie-showtime');
-const movieDescription = document.getElementById('movie-description');
-const availableTickets = document.getElementById('available-tickets');
-const buyTicketButton = document.getElementById('buy-ticket');
-
-// Fetch the first film's details
-function fetchFilmDetails(filmId) {
-    fetch(`http://localhost:3000/films/${filmId}`)
-        .then(response => response.json())
-        .then(film => {
-            displayFilmDetails(film);
-        })
-        .catch(error => console.error('Error fetching film details:', error));
+// Function to fetch and display the first film's details and the list of all films
+async function fetchFilms() {
+    console.log('Fetching films...'); // Log before fetching films
+    const response = await fetch('http://localhost:3000/films');
+    
+    if (!response.ok) {
+        console.error('Failed to fetch films:', response.status, response.statusText);
+        return; // Exit if the fetch fails
+    }
+    
+    const films = await response.json();
+    console.log('Films data:', films); // Log the fetched films data
+    displayFirstFilm(films[0]); // Display the first film details
+    populateFilmList(films); // Populate the film list on the left side
 }
 
-// Fetch all films for the menu
-function fetchAllFilms() {
-    fetch("http://localhost:3000/films")
-        .then(response => response.json())
-        .then(films => {
-            displayFilmsMenu(films);
-        })
-        .catch(error => console.error('Error fetching films:', error));
+// Function to display the first film's details
+function displayFirstFilm(film) {
+    const filmDetails = document.getElementById('film-details');
+    filmDetails.innerHTML = `
+        <h2>${film.title}</h2>
+        <img src="${film.poster}" alt="${film.title} poster" />
+        <p>Runtime: ${film.runtime} minutes</p>
+        <p>Showtime: ${film.showtime}</p>
+        <p>Available Tickets: ${film.capacity - film.tickets_sold}</p>
+        <button id="buy-ticket" onclick="buyTicket(${film.id}, ${film.tickets_sold}, ${film.capacity})">Buy Ticket</button>
+    `;
 }
 
-// Display the films menu
-function displayFilmsMenu(films) {
-    filmsList.innerHTML = ''; // Clear loading text
+// Function to populate the list of films
+function populateFilmList(films) {
+    const filmList = document.getElementById('films');
+    filmList.innerHTML = ''; // Clear previous entries
     films.forEach(film => {
         const li = document.createElement('li');
-        li.textContent = film.title;
-        li.className = "film item";
-        li.addEventListener('click', () => {
-            fetchFilmDetails(film.id);
-        });
-        filmsList.appendChild(li);
+        li.className = 'film item';
+        li.innerHTML = `
+            <h3>${film.title}</h3>
+            <p>Runtime: ${film.runtime} minutes</p>
+            <p>Showtime: ${film.showtime}</p>
+            <p>Available Tickets: ${film.capacity - film.tickets_sold}</p>
+            <button onclick="buyTicket(${film.id}, ${film.tickets_sold}, ${film.capacity})">Buy Ticket</button>
+            <button onclick="deleteFilm(${film.id})">Delete Film</button>
+        `;
+        filmList.appendChild(li);
     });
 }
 
-// Display selected film details
-function displayFilmDetails(film) {
-    movieTitle.textContent = film.title;
-    moviePoster.src = film.poster;
-    movieRuntime.textContent = film.runtime;
-    movieShowtime.textContent = film.showtime;
-    movieDescription.textContent = film.description;
+// Function to buy a ticket for a film
+async function buyTicket(filmId, ticketsSold, capacity) {
+    console.log(`Buying ticket for film ID: ${filmId}, tickets sold: ${ticketsSold}, capacity: ${capacity}`);
+    
+    if (ticketsSold < capacity) {
+        const newTicketsSold = ticketsSold + 1;
 
-    const soldTickets = film.tickets_sold;
-    const available = film.capacity - soldTickets;
-    availableTickets.textContent = available;
+        console.log(`Updating tickets sold to: ${newTicketsSold}`);
 
-    // Update the button based on available tickets
-    buyTicketButton.textContent = available > 0 ? 'Buy Ticket' : 'Sold Out';
-    buyTicketButton.disabled = available === 0; // Disable button if sold out
+        // Update the number of tickets sold
+        const response = await fetch(`http://localhost:3000/films/${filmId}`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ tickets_sold: newTicketsSold }),
+        });
 
-    buyTicketButton.onclick = () => {
-        if (available > 0) {
-            buyTicket(film.id, soldTickets + 1);
+        if (!response.ok) {
+            console.error('Failed to update tickets sold:', response.status, response.statusText);
+            return; // Exit if the fetch fails
         }
-    };
+
+        // Refresh film data after buying a ticket
+        fetchFilms(); 
+    } else {
+        alert('This film is sold out!');
+    }
 }
 
-// Buy a ticket for a selected film
-function buyTicket(filmId, newTicketsSold) {
-    // Update tickets sold on the server
-    fetch(`http://localhost:3000/films/${filmId}`, {
-        method: 'PATCH',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ tickets_sold: newTicketsSold })
-    })
-    .then(response => response.json())
-    .then(updatedFilm => {
-        displayFilmDetails(updatedFilm);
-    })
-    .catch(error => console.error('Error purchasing ticket:', error));
+// Function to delete a film from the list
+async function deleteFilm(filmId) {
+    console.log(`Deleting film with ID: ${filmId}`);
+    
+    const response = await fetch(`http://localhost:3000/films/${filmId}`, {
+        method: 'DELETE',
+    });
+
+    if (!response.ok) {
+        console.error('Failed to delete film:', response.status, response.statusText);
+        return; // Exit if the delete fails
+    }
+
+    // Refresh the film list after deletion
+    fetchFilms();
 }
 
-// Initial fetch for films
-fetchAllFilms();
-fetchFilmDetails(1); // Load details for the first film on page load
+// Initial load of films when the page is ready
+document.addEventListener('DOMContentLoaded', () => {
+    fetchFilms();
+});
