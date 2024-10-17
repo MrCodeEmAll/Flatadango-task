@@ -55,7 +55,7 @@ async function buyTicket(filmId, ticketsSold, capacity) {
 
         console.log(`Updating tickets sold to: ${newTicketsSold}`);
 
-        // Update the number of tickets sold
+        // Update the number of tickets sold on the server
         const response = await fetch(`http://localhost:3000/films/${filmId}`, {
             method: 'PATCH',
             headers: {
@@ -69,6 +69,19 @@ async function buyTicket(filmId, ticketsSold, capacity) {
             return; // Exit if the fetch fails
         }
 
+        // Also add the ticket purchase to the tickets endpoint
+        await fetch(`http://localhost:3000/tickets`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                film_id: filmId,
+                number_of_tickets: 1, // Adjust as necessary
+            }),
+        });
+
+        console.log('Ticket purchased successfully!');
         // Refresh film data after buying a ticket
         fetchFilms(); 
     } else {
