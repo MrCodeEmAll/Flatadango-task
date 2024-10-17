@@ -1,0 +1,29 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 20px;
+}
+
+#main-content {
+    display: flex;
+    justify-content: space-between;
+}
+
+#film-details, #film-list {
+    border: 1px solid #ccc;
+    padding: 10px;
+    width: 48%;
+}
+
+#film-list ul {
+    list-style: none;
+    padding: 0;
+}
+
+#film-list li {
+    margin: 5px 0;
+}
+
+.sold-out {
+    color: red;
+    text-decoration: line-through;
+}

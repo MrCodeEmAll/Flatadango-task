@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flatadango</title>
+    <style>
+        /* Basic styles for better visibility */
+        body {
+            display: flex;
+            justify-content: space-between;
+            padding: 20px;
+        }
+        #films {
+            list-style-type: none;
+            padding: 0;
+        }
+        .film {
+            margin-bottom: 20px;
+        }
+        .sold-out {
+            color: red;
+        }
+    </style>
+</head>
+<body>
+    <div>
+        <h1>Flatadango Movie Theater</h1>
+        <ul id="films">
+            <li id="loading">Loading movies...</li> <!-- Placeholder while loading -->
+        </ul>
+    </div>
+    <div id="movie-details">
+        <h2 id="movie-title"></h2>
+        <img id="movie-poster" alt="Movie Poster" />
+        <p><strong>Runtime:</strong> <span id="movie-runtime"></span> minutes</p>
+        <p><strong>Showtime:</strong> <span id="movie-showtime"></span></p>
+        <p><strong>Description:</strong> <span id="movie-description"></span></p>
+        <p><strong>Available Tickets:</strong> <span id="available-tickets"></span></p>
+        <button id="buy-ticket">Buy Ticket</button>
+    </div>
+    
+    <script src="index.js"></script>
+</body>
+</html>
